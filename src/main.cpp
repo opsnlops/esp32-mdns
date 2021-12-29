@@ -8,10 +8,15 @@
 #include <ESPmDNS.h>
 
 #include "secrets.h"
+#include "network/connection.h"
 #include "mdns/magicbroker.h"
+
+const int LED_PIN = LED_BUILTIN;
 
 void setup()
 {
+
+    pinMode (LED_PIN, OUTPUT);
 
     // Open serial communications and wait for port to open:
     Serial.begin(19200);
@@ -21,16 +26,12 @@ void setup()
     // Nice long delay to let the terminal app start
     delay(2500);
     log_i("Helllllo! I'm up and running on on %s!", ARDUINO_VARIANT);
+    digitalWrite(LED_PIN, LOW);
+    
 
-    WiFi.begin(WIFI_NETWORK, WIFI_PASSWORD);
+    NetworkConnection network = NetworkConnection();
+    network.connectToWiFi();
 
-    /*wait until ESP32 connect to WiFi*/
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        delay(500);
-        log_d(" (not yet)");
-    }
-    log_i("WiFi connected to %s", WIFI_NETWORK);
 
     if (!MDNS.begin("esp32-mdns"))
     {
@@ -46,7 +47,7 @@ void setup()
     MDNS.addService("creatures", "tcp", 666);
     MDNS.addServiceTxt("creatures", "tcp", "board", ARDUINO_VARIANT);
     log_d("created a fake service");
-
+    
     MagicBroker broker = MagicBroker();
     if (broker.find())
     {
